@@ -295,6 +295,23 @@ riscv64-unknown-elf-gcc \
 ```bash
 ./doomcpu snake.elf
 ```
+## A file-manager for easy program/games opening
+### 1. Compile
+```bash
+riscv64-unknown-elf-gcc \
+  -march=rv32i -mabi=ilp32 -Os \
+  -ffreestanding -fno-builtin -msmall-data-limit=0 \
+  -ffunction-sections -fdata-sections \
+  -nostdlib -nostartfiles \
+  -T doomcpu.ld -Wl,-e,_start \
+  -Wl,--gc-sections -Wl,--build-id=none \
+  -o filemanager/filemanager.elf \
+  libc-start.S filemanager/filemanager.c -lgcc
+```
+### 2. Run
+```bash
+./doomcpu filemanager/filemanager.elf
+```
 ## Troubleshooting
 
 ### SDL window or audio device does not open
