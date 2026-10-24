@@ -19,18 +19,22 @@ The project started as a tiny CPU interpreter and grew into a little virtual com
 
 ## Requirements
 
-These instructions target Linux or Ubuntu under WSL2. Run all commands from your Linux shell, not PowerShell.
+These instructions are written for Debian 13 (Trixie), including Debian in WSL2 or a container. Run the command blocks in Bash, not PowerShell. Other distributions may use different package names or install the RISC-V toolchain files in different locations.
+
+Use `sudo` for package installation when working as a normal user. If you are already root (for example, inside a Docker container), omit `sudo` from the package commands.
 
 ### Install host dependencies
 
 ```bash
 sudo apt update
 sudo apt install -y \
-  build-essential gcc git pkg-config curl wget unzip \
-  libsdl2-dev ffmpeg python3 python3-pipx \
+  build-essential gcc git pkg-config ca-certificates curl wget unzip \
+  libsdl2-dev ffmpeg python3 pipx \
   gcc-riscv64-unknown-elf binutils-riscv64-unknown-elf \
   picolibc-riscv64-unknown-elf
 ```
+
+Use `pipx`, not `python3-pipx`, for Debian 13. The `python3-pipx` package name does not exist in the Debian 13 package archive.
 
 SDL_mixer and a General MIDI SoundFont are useful for the optional MIDI music bridge:
 
@@ -38,15 +42,15 @@ SDL_mixer and a General MIDI SoundFont are useful for the optional MIDI music br
 sudo apt install -y libsdl2-mixer-dev timidity freepats fluid-soundfont-gm
 ```
 
-The guest toolchain needs a RISC-V bare-metal compiler, binutils, and Picolibc. Package names vary by Linux distribution. Confirm these paths are available before building:
+The guest toolchain needs a RISC-V bare-metal compiler, binutils, and Picolibc. Confirm the compiler and libraries are installed before building:
 
 ```bash
 command -v riscv64-unknown-elf-gcc
 command -v riscv64-unknown-elf-size
-test -f /usr/lib/picolibc/riscv64-unknown-elf/picolibc.specs && echo "Picolibc specs found"
+test -f /usr/lib/picolibc/riscv64-unknown-elf/picolibc.specs && echo "Picolibc specs found" || { echo "Picolibc specs file not found; locate it and update the --specs path below." >&2; exit 1; }
 ```
 
-On Debian 13, the compiler, binutils, and Picolibc package names above provide the expected toolchain. If the specs file is in a different location on your distribution, update the `--specs` argument in the guest build commands to match it.
+The package names and specs path above are for Debian 13 (Trixie). On another distribution, install its equivalent packages and update the `--specs` argument in the guest build command if Picolibc installs the specs file somewhere else.
 
 ### Expected project layout
 
@@ -127,6 +131,11 @@ mapfile -t DOOM_SOURCES < <(
   grep -v '^doomgeneric_xlib\.c$'
 )
 
+if [ "${#DOOM_SOURCES[@]}" -eq 0 ]; then
+  echo "Could not extract SRC_DOOM from the DoomGeneric Makefile. Check that upstream Makefile before continuing." >&2
+  exit 1
+fi
+
 cd ~/doomcpu
 
 # If the optional guest MIDI module exists, include it and Doom's MUS converter.
@@ -157,7 +166,7 @@ riscv64-unknown-elf-gcc \
   -o doomcpu.elf \
   libc-start.S doomcpu-libc.c doomcpu-platform.c \
   doomcpu-sound.c "${MUSIC_SOURCES[@]}" doomcpu-main.c \
-  "${DOOM_SOURCES[@]/#/$D/}" -lm
+  "${DOOM_SOURCES[@]/#/$D/}" -lm -lgcc
 ```
 
 This enables Doom's sound-effects path. It sends mixed PCM to the host SDL audio device. Background MIDI music is optional. If `doomcpu-music.c` is present and you want music, ensure `doomcpu-main.c` does not pass `-nomusic`, and build the host emulator with the SDL_mixer MIDI bridge described above. MIDI playback is an optional experimental extension, so it may need debugging on some systems.
@@ -254,10 +263,10 @@ riscv64-unknown-elf-gcc \
   -T doomcpu.ld -Wl,-e,_start \
   -Wl,--gc-sections -Wl,--build-id=none \
   -o badapple.elf \
-  libc-start.S badapple.c
+  libc-start.S badapple.c -lgcc
 ```
 
-The player should avoid integer division in its guest code because RV32I does not include hardware divide instructions, unless the required compiler runtime routine is linked as well.
+RV32I has no hardware integer divide instruction. The build command explicitly links `-lgcc` so GCC runtime helpers such as `__udivsi3` are available if the compiler emits calls to them.
 
 ### 6. Play
 
@@ -284,7 +293,7 @@ Run from `~/doomcpu`, check the WAD filename, and make sure `doomcpu-main.c` use
 
 ### `undefined reference to __udivsi3`
 
-The guest is using RV32I, which has no `DIV` instruction. Avoid integer division in the guest code or link the appropriate compiler runtime library.
+The guest is using RV32I, which has no `DIV` instruction. The Bad Apple build command includes `-lgcc` for compiler runtime helpers. If this error persists, verify that `riscv64-unknown-elf-gcc` is the compiler being used and that its matching runtime library is installed.
 
 ### MIDI music is silent
 
