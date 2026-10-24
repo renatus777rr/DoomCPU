@@ -8,13 +8,6 @@ Run these commands from the DoomCPU repository root (Debian/Ubuntu dependencies:
 
 ```bash
 
-gcc -D_POSIX_C_SOURCE=200809L \
-  -DDOOMCPU_SDL -DDOOMCPU_SDL_MUSIC \
-  -std=c11 -O2 -Wall -Wextra \
-  $(pkg-config --cflags sdl2 SDL2_mixer) \
-  -o doomcpu src/cpu.c \
-  $(pkg-config --libs sdl2 SDL2_mixer)
-
 riscv64-unknown-elf-gcc \
   -march=rv32i -mabi=ilp32 -Os \
   -ffreestanding -fno-builtin -msmall-data-limit=0 \
