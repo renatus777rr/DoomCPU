@@ -27,3 +27,7 @@
 Thumbs.db
 .vscode/
 .idea/
+
+# Local guest programs launched by DoomCPU File Manager
+/filemanager/*.elf
+/filemanager/**/*.elf
