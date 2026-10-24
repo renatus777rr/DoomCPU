@@ -2,19 +2,6 @@
 
 A keyboard-controlled RV32I guest program for DoomCPU. It browses the host-side `filemanager/` directory, opens subdirectories, and launches `.elf` files as nested guest programs.
 
-## Host bridge requirement
-
-The host emulator needs two extra ECALL services. From the DoomCPU repository root, run:
-
-```bash
-python3 filemanager/patch_host.py
-```
-
-This edits `src/cpu.c` and creates `src/cpu.c.before-filemanager` as a backup. The added services are:
-
-- `a7=38`: `a0=directory path`, `a1=output buffer`, `a2=capacity`; returns the number of bytes written as NUL-terminated records. Each record begins with a type byte (`D` directory, `E` ELF, `F` ordinary file, `X` other), followed by the name and a NUL byte.
-- `a7=39`: `a0=relative guest ELF path`; executes that guest in separate 64 MiB RAM and returns when it exits.
-
 ## Build
 
 Run these commands from the DoomCPU repository root (Debian/Ubuntu dependencies: `gcc-riscv64-unknown-elf`, binutils, and Picolibc are needed):
