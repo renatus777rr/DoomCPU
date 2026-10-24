@@ -7,8 +7,6 @@ A keyboard-controlled RV32I guest program for DoomCPU. It browses the host-side 
 Run these commands from the DoomCPU repository root (Debian/Ubuntu dependencies: `gcc-riscv64-unknown-elf`, binutils, and Picolibc are needed):
 
 ```bash
-mkdir -p filemanager
-python3 filemanager/patch_host.py
 
 gcc -D_POSIX_C_SOURCE=200809L -DDOOMCPU_SDL \
   -std=c11 -O2 -Wall -Wextra \
