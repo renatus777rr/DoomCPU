@@ -276,7 +276,25 @@ cd ~/doomcpu
 ```
 
 A window titled `Bad Apple - DoomCPU` should display the black-and-white animation and play the PCM soundtrack through SDL audio. Press `q` or Esc if your current `badapple.c` includes the quit-key handling.
+## Run simple snake game
+### 1. Compile
+```bash
+cd ~/doomcpu
 
+riscv64-unknown-elf-gcc \
+  -march=rv32i -mabi=ilp32 -Os \
+  -ffreestanding -fno-builtin -msmall-data-limit=0 \
+  -ffunction-sections -fdata-sections \
+  -nostdlib -nostartfiles \
+  -T doomcpu.ld -Wl,-e,_start \
+  -Wl,--gc-sections -Wl,--build-id=none \
+  -o snake.elf \
+  libc-start.S snake.c -lgcc
+```
+### 2. Play
+```bash
+./doomcpu snake.elf
+```
 ## Troubleshooting
 
 ### SDL window or audio device does not open
