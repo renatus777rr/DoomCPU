@@ -16,6 +16,7 @@ The project started as a tiny CPU interpreter and grew into a little virtual com
 - SDL2 display using a 320 x 200 DoomGeneric framebuffer
 - DoomGeneric support with Freedoom and compatible Doom IWADs
 - A guest Bad Apple player with grayscale video and PCM soundtrack support
+- Some programs and games
 
 ## Requirements
 
